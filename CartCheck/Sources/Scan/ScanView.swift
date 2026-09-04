@@ -11,6 +11,7 @@ struct ScanView: View {
     @State private var pendingBarcode: String?
     @State private var isShowingCamera = false
     @State private var photoPickerItem: PhotosPickerItem?
+    @State private var editingItem: CartItem?
 
     var body: some View {
         NavigationStack {
@@ -29,17 +30,23 @@ struct ScanView: View {
                         )
                     } else {
                         ForEach(viewModel.cartItems) { item in
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text(item.name)
-                                    if let barcode = item.barcode {
-                                        Text(barcode).font(.caption).foregroundStyle(.secondary).monospaced()
+                            Button {
+                                editingItem = item
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text(item.name)
+                                        if let barcode = item.barcode {
+                                            Text(barcode).font(.caption).foregroundStyle(.secondary).monospaced()
+                                        }
                                     }
+                                    Spacer()
+                                    Text(item.priceSeen.currencyStringOrDash)
+                                        .foregroundStyle(.secondary)
                                 }
-                                Spacer()
-                                Text(item.priceSeen.currencyStringOrDash)
-                                    .foregroundStyle(.secondary)
+                                .contentShape(Rectangle())
                             }
+                            .buttonStyle(.plain)
                         }
                         .onDelete { viewModel.removeItems(at: $0) }
                     }
@@ -85,8 +92,9 @@ struct ScanView: View {
 
                 if let error = viewModel.reconciliationError {
                     Section {
-                        Text(error).foregroundStyle(.red)
+                        InlineErrorBanner(message: error)
                     }
+                    .listRowInsets(EdgeInsets())
                 }
             }
             .navigationTitle("Scan")
@@ -99,6 +107,11 @@ struct ScanView: View {
             .sheet(isPresented: $isShowingManualAdd) {
                 AddItemSheet(barcode: pendingBarcode) { name, price in
                     viewModel.addItem(barcode: pendingBarcode, name: name, priceSeen: price)
+                }
+            }
+            .sheet(item: $editingItem) { item in
+                AddItemSheet(existingItem: item) { name, price in
+                    viewModel.updateItem(id: item.id, name: name, priceSeen: price)
                 }
             }
             .fullScreenCover(isPresented: $isShowingCamera) {

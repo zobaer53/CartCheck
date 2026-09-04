@@ -29,6 +29,11 @@ struct ReviewView: View {
                     ProgressView()
                 }
             }
+            .safeAreaInset(edge: .top) {
+                if let error = viewModel.errorMessage {
+                    InlineErrorBanner(message: error)
+                }
+            }
         }
     }
 }

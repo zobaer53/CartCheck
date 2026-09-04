@@ -38,6 +38,15 @@ final class ActiveTripViewModel {
         updateLiveActivity()
     }
 
+    func updateItem(id: UUID, name: String, priceSeen: Decimal?) {
+        guard let index = cartItems.firstIndex(where: { $0.id == id }) else { return }
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return }
+        cartItems[index].name = trimmedName
+        cartItems[index].priceSeen = priceSeen
+        updateLiveActivity()
+    }
+
     /// A Live Activity on the Lock Screen showing the running count and
     /// total, so the shopper never has to switch back to the app mid-cart
     /// just to see it — starts on the first item, ends once the trip is

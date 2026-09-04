@@ -29,7 +29,11 @@ struct HistoryView: View {
                         )
                     } else {
                         ForEach(viewModel.trips) { trip in
-                            tripRow(trip)
+                            NavigationLink {
+                                TripDetailView(trip: trip)
+                            } label: {
+                                tripRow(trip)
+                            }
                         }
                     }
                 }
@@ -37,6 +41,11 @@ struct HistoryView: View {
             .navigationTitle("History")
             .task { await viewModel.refresh() }
             .refreshable { await viewModel.refresh() }
+            .safeAreaInset(edge: .top) {
+                if let error = viewModel.errorMessage {
+                    InlineErrorBanner(message: error)
+                }
+            }
         }
     }
 

@@ -1,13 +1,36 @@
 import SwiftUI
+import SwiftData
+import CartCheckData
 
-// Composition root. Nothing to wire up yet — no repositories exist until
-// the Domain/Data layers are built out (see the CartCheck app-idea doc in
-// the Random iOS Apps project for the full concept and phased plan).
 @main
 struct CartCheckApp: App {
+    private let dependencies: AppDependencies
+
+    init() {
+        let container = Self.makeModelContainer()
+        let store = SwiftDataStore(modelContainer: container)
+        dependencies = AppDependencies(
+            tripStore: store,
+            priceHistoryStore: store,
+            receiptTextExtractor: VisionReceiptTextExtractor(),
+            matcher: FoundationModelsCartMatcher()
+        )
+    }
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(dependencies: dependencies)
+        }
+    }
+
+    private static func makeModelContainer() -> ModelContainer {
+        do {
+            return try ModelContainer(for: Schema(CartCheckSchema.models))
+        } catch {
+            // Persistence is core to the app, not an optional feature — if
+            // the on-disk store can't be opened there's nothing usable to
+            // fall back to.
+            fatalError("Failed to create CartCheck's persistent store: \(error)")
         }
     }
 }

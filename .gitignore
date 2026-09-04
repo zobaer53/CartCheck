@@ -7,6 +7,9 @@ xcuserdata/
 *.xcscmblueprint
 *.xccheckout
 
+# XcodeGen-generated project — regenerate with `xcodegen generate`
+*.xcodeproj/
+
 # SwiftPM
 .build/
 .swiftpm/xcode/xcuserdata/

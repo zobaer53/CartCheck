@@ -1,38 +1,48 @@
 import SwiftUI
 
-// Placeholder shell reflecting the two real moments in the app: scanning
-// while you shop, and reviewing whatever didn't match afterward. Both tabs
-// are stand-ins until CartCheckDomain/CartCheckData exist.
 struct ContentView: View {
+    let dependencies: AppDependencies
+
+    @State private var activeTripViewModel: ActiveTripViewModel
+    @State private var reviewViewModel: ReviewViewModel
+    @State private var historyViewModel: HistoryViewModel
+
+    init(dependencies: AppDependencies) {
+        self.dependencies = dependencies
+        _activeTripViewModel = State(initialValue: ActiveTripViewModel(dependencies: dependencies))
+        _reviewViewModel = State(initialValue: ReviewViewModel(dependencies: dependencies))
+        _historyViewModel = State(initialValue: HistoryViewModel(dependencies: dependencies))
+    }
+
     var body: some View {
         TabView {
-            NavigationStack {
-                VStack(spacing: 12) {
-                    Image(systemName: "barcode.viewfinder")
-                        .font(.system(size: 40))
-                        .foregroundStyle(.secondary)
-                    Text("Barcode + receipt scanning goes here.")
-                        .foregroundStyle(.secondary)
-                }
-                .navigationTitle("Scan")
-            }
-            .tabItem { Label("Scan", systemImage: "barcode.viewfinder") }
+            ScanView(viewModel: activeTripViewModel)
+                .tabItem { Label("Scan", systemImage: "barcode.viewfinder") }
 
-            NavigationStack {
-                VStack(spacing: 12) {
-                    Image(systemName: "checklist")
-                        .font(.system(size: 40))
-                        .foregroundStyle(.secondary)
-                    Text("Flagged mismatches to confirm go here.")
-                        .foregroundStyle(.secondary)
-                }
-                .navigationTitle("Review")
+            ReviewView(viewModel: reviewViewModel)
+                .tabItem { Label("Review", systemImage: "checklist") }
+                .badge(reviewViewModel.pendingReviews.count)
+
+            HistoryView(viewModel: historyViewModel)
+                .tabItem { Label("History", systemImage: "clock.arrow.circlepath") }
+        }
+        .onChange(of: activeTripViewModel.justCompletedTrip) { _, newValue in
+            guard newValue != nil else { return }
+            Task {
+                await reviewViewModel.refresh()
+                await historyViewModel.refresh()
             }
-            .tabItem { Label("Review", systemImage: "checklist") }
         }
     }
 }
 
 #Preview {
-    ContentView()
+    ContentView(
+        dependencies: AppDependencies(
+            tripStore: PreviewTripStore(),
+            priceHistoryStore: PreviewPriceHistoryStore(),
+            receiptTextExtractor: PreviewReceiptTextExtractor(),
+            matcher: PreviewCartReceiptMatcher()
+        )
+    )
 }

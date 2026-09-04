@@ -10,8 +10,11 @@ import CartCheckData
 @MainActor
 final class ActiveTripViewModel {
     private let dependencies: AppDependencies
+    private let liveActivity = TripLiveActivityController()
 
-    var store: String = ""
+    var store: String = "" {
+        didSet { updateLiveActivity() }
+    }
     var cartItems: [CartItem] = []
     var isReconciling = false
     var reconciliationError: String?
@@ -27,10 +30,28 @@ final class ActiveTripViewModel {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedName.isEmpty else { return }
         cartItems.append(CartItem(barcode: barcode, name: trimmedName, priceSeen: priceSeen))
+        updateLiveActivity()
     }
 
     func removeItems(at offsets: IndexSet) {
         cartItems.remove(atOffsets: offsets)
+        updateLiveActivity()
+    }
+
+    /// A Live Activity on the Lock Screen showing the running count and
+    /// total, so the shopper never has to switch back to the app mid-cart
+    /// just to see it — starts on the first item, ends once the trip is
+    /// reconciled or the cart is emptied. Best-effort: if the shopper
+    /// hasn't allowed Live Activities, scanning works exactly the same
+    /// either way.
+    private func updateLiveActivity() {
+        guard !cartItems.isEmpty else {
+            liveActivity.end()
+            return
+        }
+        let total = cartItems.compactMap(\.priceSeen).reduce(0, +)
+        liveActivity.start(storeName: storeNameOrNil, itemsScanned: cartItems.count, runningTotal: total)
+        liveActivity.update(itemsScanned: cartItems.count, runningTotal: total)
     }
 
     func dismissCompletedTrip() {
@@ -70,6 +91,7 @@ final class ActiveTripViewModel {
 
             justCompletedTrip = trip
             cartItems = []
+            liveActivity.end()
         } catch {
             reconciliationError = Self.message(for: error)
         }

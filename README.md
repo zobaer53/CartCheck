@@ -31,7 +31,8 @@ real in this SDK:
 
 ## Status
 
-**Phases 1–3 built**: Domain, Data, and App layers all exist and compile.
+**Phases 1–4 built**: Domain, Data, App, and a Live Activity extension all
+exist and compile.
 
 - **CartCheckDomain** (pure Swift): `CartItem`, `ReceiptLine`,
   `ProposedMatch`, `Trip`, `PriceHistoryEntry`; repository/service
@@ -46,9 +47,16 @@ real in this SDK:
   `DataScannerViewController`, receipt capture via camera or photo
   library, a review card mirroring the original pitch's compare-and-confirm
   mockup.
+- **CartCheckWidgetExtension**: a Live Activity (`CartCheckActivityAttributes`
+  + `CartCheckLiveActivityWidget`) showing items scanned and the running
+  total on the Lock Screen / Dynamic Island while a trip is in progress —
+  the pitch's "flight-tracker" pattern. Started/updated/ended by
+  `TripLiveActivityController` as the cart changes; best-effort, since the
+  shopper may not have Live Activities enabled.
 
-36 tests passing across both packages (`swift test` in `CartCheckKit`).
-Builds clean for iOS Simulator and device; launches without crashing on a
+28 tests passing across both packages (`swift test` in `CartCheckKit`).
+Builds clean for iOS Simulator and device, with the widget extension
+embedded and signature-validated; launches without crashing on a
 Simulator (verified via `xcrun simctl`).
 
 **Not yet built / known gaps**:
@@ -56,11 +64,13 @@ Simulator (verified via `xcrun simctl`).
   attached to it anywhere, so the shopper types both after each scan (or
   adds an item manually). This is an honest consequence of "no server,"
   not an oversight.
-- No Live Activity for the in-progress cart total.
-- No settings/onboarding — first launch drops straight into the Scan tab.
-- Camera-driven flows (barcode scanning, live capture) are unverifiable in
-  this environment (no camera in the Simulator) — compiled and reviewed,
-  but not run on a physical device.
+- No settings/onboarding — intentional, not a gap: the original pitch's
+  design goal is "nothing to configure on first launch."
+- Camera-driven flows (barcode scanning, live capture) and the Live
+  Activity's actual Lock Screen/Dynamic Island rendering are unverifiable
+  in this environment (no camera, and Live Activities aren't reliably
+  exercised on a Simulator) — compiled and reviewed, not run on a physical
+  device.
 
 Setup mirrors `OneThingToday`: XcodeGen (`project.yml` → `.xcodeproj`),
 Clean Architecture (Domain: pure Swift, Data: concrete repositories, App:

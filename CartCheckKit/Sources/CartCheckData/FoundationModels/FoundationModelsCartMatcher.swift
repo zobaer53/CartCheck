@@ -99,7 +99,10 @@ public struct FoundationModelsCartMatcher: CartReceiptMatching, Sendable {
 
     /// Fills in any cart item or receipt line the model's response didn't
     /// reference, so completeness never depends on the model cooperating.
-    private static func reconcile(
+    /// Internal rather than private so the safety net itself — not just
+    /// the end-to-end `match` call, which needs a live model — is directly
+    /// unit testable.
+    static func reconcile(
         payloads: [CartMatchPayload],
         cartItems: [CartItem],
         receiptLines: [ReceiptLine]

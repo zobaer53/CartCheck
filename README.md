@@ -54,7 +54,7 @@ exist and compile.
   `TripLiveActivityController` as the cart changes; best-effort, since the
   shopper may not have Live Activities enabled.
 
-28 tests passing across both packages (`swift test` in `CartCheckKit`).
+33 tests passing across both packages (`swift test` in `CartCheckKit`).
 Builds clean for iOS Simulator and device, with the widget extension
 embedded and signature-validated; launches without crashing on a
 Simulator (verified via `xcrun simctl`).
